@@ -1,5 +1,11 @@
 import cv2
 import numpy as np
+colors = dict()
+colors["Green"]=([0,51,25],[178,255,102])
+colors["Red"]=([0,0,154],[204,204,255])
+colors["Blue"]=([102,51,0],[255,153,153])
+colors["Yellow"]=([0,244,244],[204,255,255])
+colors["Orange"]=([0,128,255],[153,204,255])
 
 
 def pre_processing(img):
@@ -62,14 +68,51 @@ def get_counturs(clone, img):
             return cut_img
     return clone
 
+def testColor(color,img):
+    low = np.array([colors[color][0][0],colors[color][0][1],colors[color][0][2]])
+    high = np.array([colors[color][1][0],colors[color][1][1],colors[color][1][2]])
+    mask = cv2.inRange(img, low, high)
+
+    out = cv2.bitwise_and(img,img,mask = mask)
+    return out
+
+def filterColor(img):
+
+    red = testColor("Red", img)
+    yellow = testColor("Yellow", img)
+    green = testColor("Green", img)
+    blue = testColor("Blue", img)
+    orange = testColor("Orange",img)
+    #cv2.imshow('TESTE', orange)
+
+    coloredPixels=[]
+    coloredPixels.append((cv2.countNonZero(pre_processing(red)), "Red"))
+    coloredPixels.append((cv2.countNonZero(pre_processing(yellow)), "Yellow"))
+    coloredPixels.append((cv2.countNonZero(pre_processing(green)), "Green"))
+    coloredPixels.append((cv2.countNonZero(pre_processing(blue)), "Blue"))
+    coloredPixels.append((cv2.countNonZero(pre_processing(orange)), "Orange"))
+
+    max = 0
+    col = ""
+
+    for c in coloredPixels:
+        # print(c)
+        if c[0] > max:
+            max=c[0]
+            col=c[1]
+
+    return col
 
 def main():
-    capture = cv2.VideoCapture(0)
+    capture = cv2.VideoCapture(1)
     while True:
         ret, frame = capture.read()
         cv2.imshow('video', frame)
 
         img = pre_processing(frame)
+
+
+        print(filterColor(frame))
 
         # res = frame.copy()
         # res = cv2.cvtColor(res, cv2.COLOR_BGR2BGRA)
