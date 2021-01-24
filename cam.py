@@ -16,7 +16,7 @@ def pre_processing(img):
 
     # https://learnopencv.com/otsu-thresholding-with-opencv/
     # OTSU threshold
-    otsu_threshold, image_result = cv2.threshold(gause_img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    otsu_threshold, image_result = cv2.threshold(gause_img, 10, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
     image_result = cv2.morphologyEx(image_result, cv2.MORPH_OPEN, kernel)
@@ -51,21 +51,42 @@ def get_counturs(clone, img):
     countours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     for c in countours:
         area = cv2.contourArea(c)
-        if area > 800:  # para encontrar só elementos grandes (bandeja)
+        if area > 2000:  # para encontrar só elementos grandes (bandeja)
             # cv2.drawContours(clone, c, -1, (0, 255, 0), 2)
             perimetro = cv2.arcLength(c, True)
-            cantos = cv2.approxPolyDP(c, 0.02*perimetro, True)
+            cantos = cv2.approxPolyDP(c, 0.02 * perimetro, True)
             x, y, w, h = cv2.boundingRect(cantos)
 
-            cut_img = clone[y:y+h, x:x+w]
+            cut_img = clone[y:y + h, x:x + w]
 
-            cv2.rectangle(clone, (x, y), (x+w, y+h), (255, 255, 0), 2)
+            cv2.rectangle(clone, (x, y), (x + w, y + h), (255, 255, 0), 2)
 
             cv2.putText(clone, get_type(len(cantos), w, h), (x + (w // 2), (y - 5)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            cv2.imshow('contornos', clone)
+            # cv2.imshow('contornos', clone)
 
-            return cut_img
+            return cut_img, True
+    return clone, False
+
+
+
+def get_counturs_fruits(clone, img):
+    countours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    fruits = []
+
+    for c in countours:
+        area = cv2.contourArea(c)
+        if 500 < area < 2000:
+            # cv2.drawContours(clone, c, -1, (0, 255, 0), 1)
+            perimetro = cv2.arcLength(c, True)
+            cantos = cv2.approxPolyDP(c, 0.02 * perimetro, True)
+            x, y, w, h = cv2.boundingRect(cantos)
+            fruits.append(c)
+
+    if len(fruits) > 0:
+        # print(str(len(fruits)))
+        cv2.putText(clone, str(len(fruits)), ((x + 30), (y + 30)),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
     return clone
 
 def testColor(color,img):
@@ -104,12 +125,14 @@ def filterColor(img):
     return col
 
 def main():
-    capture = cv2.VideoCapture(1)
+    capture = cv2.VideoCapture(0)
+
     while True:
         ret, frame = capture.read()
         cv2.imshow('video', frame)
 
         img = pre_processing(frame)
+        # cv2.imshow('pre', img)
 
 
         print(filterColor(frame))
@@ -120,9 +143,21 @@ def main():
         # if cv2.waitKey(1) & 0xFF == ord("p"):
         #     cv2.imwrite('retina_masked.png', res)
 
-        imgc = frame.copy()
-        img = get_counturs(imgc, img)
-        cv2.imshow('cut_img', img)
+        original = frame.copy()
+        img, bandeja = get_counturs(original, img)
+        # cv2.imshow('cut_img', img)
+
+        if bandeja:  # encontrou a bandeja
+            pre_img_cut = pre_processing(img)
+            # cv2.imshow('pre cut_img', pre_img_cut)
+
+            img = get_counturs_fruits(original, pre_img_cut)
+
+        else:
+            cv2.putText(img, "Base not found", (30, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+        cv2.imshow("n_fruits", img)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
