@@ -96,17 +96,18 @@ def get_counturs_fruits(clone, img):
     for c in countours:
         area = cv2.contourArea(c)
         if 500 < area < 2000:
-            # cv2.drawContours(clone, c, -1, (0, 255, 0), 1)
             perimetro = cv2.arcLength(c, True)
             cantos = cv2.approxPolyDP(c, 0.02 * perimetro, True)
             x, y, w, h = cv2.boundingRect(cantos)
-            fruits.append(c)
+            cv2.rectangle(clone, (x, y), (x + w, y + h), (255, 255, 0), 2)
+            cut_img = clone[y:y + h, x:x + w]
+            fruits.append(cut_img)
 
     if len(fruits) > 0:
         # print(str(len(fruits)))
         cv2.putText(clone, str(len(fruits)), ((x + 30), (y + 30)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-    return clone
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    return clone, fruits
 
 
 def getFood(area, color):
@@ -179,7 +180,7 @@ def main():
 
         #print(getFood(50, "Pink"))
 
-        #print(filterColor(frame))
+        # print(filterColor(frame))
 
         # res = frame.copy()
         # res = cv2.cvtColor(res, cv2.COLOR_BGR2BGRA)
@@ -189,16 +190,15 @@ def main():
 
         original = frame.copy()
         img, bandeja = get_counturs(original, img)
-        cv2.imshow('cut_img', img)
 
         if bandeja:  # encontrou a bandeja
 
             pre_img_cut = pre_processing(img)
-            cv2.imshow('pre cut_img', pre_img_cut)
-
-            img = get_counturs_fruits(original, pre_img_cut)
-
-
+            # cv2.imshow('pre cut_img', pre_img_cut)
+            original = img.copy()
+            img, fruit_imgs = get_counturs_fruits(original, pre_img_cut)
+            # fruit_imgs é uma lista em que cada elemento é uma foto
+            
         else:
             cv2.putText(img, "Base not found", (30, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
