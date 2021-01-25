@@ -15,7 +15,7 @@ def printImageFeatures(image):
     print("Number of elements:", image.size)
 
 
-def pre_processing(img):
+def pre_processing2(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # Apply Gaussian Filter

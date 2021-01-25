@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import sys
+from food import pre_processing2
 
 colors = dict()
 colors["Green"] = ([0, 51, 25], [178, 255, 102])
@@ -17,14 +18,18 @@ colors["Pink"] = ([177, 127, 218], [217, 211, 255])
 # colors["Orange"]=([15,110,153],[28,240,255])
 
 food = {
-    "Sausage": [(0, 100), ("Red", "Pink")],
-    "Pepper": [(0, 100), ("Red", "Green", "Yellow")],
-    "Eggplants": [(0, 100), ("Yellow", "Green")],
-    "Bacon": [(0, 100), ("Red")],
-    "Spinach": [(0, 100), ("Green")],
-    "Broccoli": [(0, 100), ("Green")],
-    "Olives": [(0, 100), ("Green", "Black")],
-    "Shrimp": [(0, 100), ("Red", "Orange", "Pink")]
+    "Sausage": [(1000, 4000), ("Red", "Pink")],
+    "Pepper": [(1000, 4000), ("Red", "Green", "Yellow")],
+    "Eggplants": [(1000, 4000), ("Yellow", "Green")],
+    "Bacon": [(1000, 4000), ("Red", "Pink")],
+    "Spinach": [(1000, 4000), ("Green")],
+    "Broccoli": [(1000, 4000), ("Green")],
+    "Olives": [(1000, 4000), ("Green", "Black")],
+    "Shrimp": [(1000, 4000), ("Orange", "Pink")],
+    "Green Apple": [(1000, 4000), ("Green")],
+    "Red Apple": [(1000, 4000), ("Red")],
+    "Banana": [(1000, 4000), ("Yellow", "Green")],
+    "Orange": [(1000, 4000), ("Orange")]
 }
 
 
@@ -110,7 +115,8 @@ def get_counturs_fruits(clone, img):
     return clone, fruits
 
 
-def getFood(area, color):
+def getFood(dim1, dim2, color):
+    area=dim1*dim2
     resultados = []
     for key, value in food.items():
         if area in range(value[0][0], value[0][1]):
@@ -198,7 +204,18 @@ def main():
             original = img.copy()
             img, fruit_imgs = get_counturs_fruits(original, pre_img_cut)
             # fruit_imgs é uma lista em que cada elemento é uma foto
-            
+            i=0
+            comidas=[]
+            print("EY")
+            for a in fruit_imgs:
+                #cv2.imshow("OIOI", testColor("Red",a))
+                print(filterColor(a))
+                print("EY2")
+                comidas.append(getFood(a.shape[0],a.shape[1], filterColor(a)))
+                i+=1
+                cv2.imshow("t e s t e"+str(i),a)
+            print(comidas)
+
         else:
             cv2.putText(img, "Base not found", (30, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
