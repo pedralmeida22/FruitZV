@@ -97,10 +97,10 @@ def main():
     cv2.imshow('original', image)
     printImageFeatures(image)
 
-    img = pre_processing(image)
+    img = pre_processing2(image)
     original = image.copy()
     imgcut = cut_plate(original, img)
-    n = pre_processing(imgcut)
+    n = pre_processing2(imgcut)
     cv2.imshow('pre', n)
     get_counturs(imgcut, n)
 

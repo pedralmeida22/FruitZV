@@ -18,6 +18,7 @@ colors["Pink"] = ([177, 127, 218], [217, 211, 255])
 # colors["Orange"]=([15,110,153],[28,240,255])
 
 food = {
+    "Red Apple": [(1000, 4000), ("Red")],
     "Sausage": [(1000, 4000), ("Red", "Pink")],
     "Pepper": [(1000, 4000), ("Red", "Green", "Yellow")],
     "Eggplants": [(1000, 4000), ("Yellow", "Green")],
@@ -27,7 +28,6 @@ food = {
     "Olives": [(1000, 4000), ("Green", "Black")],
     "Shrimp": [(1000, 4000), ("Orange", "Pink")],
     "Green Apple": [(1000, 4000), ("Green")],
-    "Red Apple": [(1000, 4000), ("Red")],
     "Banana": [(1000, 4000), ("Yellow", "Green")],
     "Orange": [(1000, 4000), ("Orange")]
 }
@@ -94,7 +94,7 @@ def get_counturs(clone, img):
     return clone, False
 
 
-def get_counturs_fruits(clone, img):
+def get_counturs_fruits(clone, img, frame):
     countours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     fruits = []
 
@@ -110,8 +110,8 @@ def get_counturs_fruits(clone, img):
 
     if len(fruits) > 0:
         # print(str(len(fruits)))
-        cv2.putText(clone, str(len(fruits)), ((x + 30), (y + 30)),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(frame, str(len(fruits)), (600, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
     return clone, fruits
 
 
@@ -167,12 +167,19 @@ def filterColor(img):
     return col
 
 
+def show_food(img, f):
+    offset = 1
+    for i in f:
+        cv2.putText(img, i, (30, 30 + (offset * 20)), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+        offset += 1
+
+
 def main():
 
-    capture = cv2.VideoCapture(1)
+    capture = cv2.VideoCapture(0)
 
     while True:
-        if len(sys.argv) is 1:
+        if len(sys.argv) == 1:
             ret, frame = capture.read()
         else:
             frame = cv2.imread(sys.argv[1], cv2.IMREAD_UNCHANGED)
@@ -184,16 +191,6 @@ def main():
         img = pre_processing(frame)
         # cv2.imshow('pre', img)
 
-        #print(getFood(50, "Pink"))
-
-        # print(filterColor(frame))
-
-        # res = frame.copy()
-        # res = cv2.cvtColor(res, cv2.COLOR_BGR2BGRA)
-        # res[:, :, 3] = mask
-        # if cv2.waitKey(1) & 0xFF == ord("p"):
-        #     cv2.imwrite('retina_masked.png', res)
-
         original = frame.copy()
         img, bandeja = get_counturs(original, img)
 
@@ -202,25 +199,30 @@ def main():
             pre_img_cut = pre_processing(img)
             # cv2.imshow('pre cut_img', pre_img_cut)
             original = img.copy()
-            img, fruit_imgs = get_counturs_fruits(original, pre_img_cut)
+            img, fruit_imgs = get_counturs_fruits(original, pre_img_cut, frame)
             # fruit_imgs é uma lista em que cada elemento é uma foto
-            i=0
-            comidas=[]
+            i = 0
+            comidas = []
             print("EY")
             for a in fruit_imgs:
-                #cv2.imshow("OIOI", testColor("Red",a))
+                # cv2.imshow("OIOI", testColor("Orange",a))
                 print(filterColor(a))
                 print("EY2")
-                comidas.append(getFood(a.shape[0],a.shape[1], filterColor(a)))
-                i+=1
-                cv2.imshow("t e s t e"+str(i),a)
-            print(comidas)
+                comidas.append(getFood(a.shape[0], a.shape[1], filterColor(a)))
+                i += 1
+                # cv2.imshow("t e s t e" + str(i), a)
+
+            if comidas:
+                comidas = [item for sublist in comidas for item in sublist]
+                show_food(frame, comidas)
+                print(comidas)
 
         else:
-            cv2.putText(img, "Base not found", (30, 30),
+            cv2.putText(frame, "Base not found", (30, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
         cv2.imshow("n_fruits", img)
+        cv2.imshow("ooo", frame)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
