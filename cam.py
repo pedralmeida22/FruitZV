@@ -1,11 +1,31 @@
 import cv2
 import numpy as np
+import sys
+
 colors = dict()
-colors["Green"]=([0,51,25],[178,255,102])
-colors["Red"]=([0,0,154],[204,204,255])
-colors["Blue"]=([102,51,0],[255,153,153])
-colors["Yellow"]=([0,244,244],[204,255,255])
-colors["Orange"]=([0,128,255],[153,204,255])
+colors["Green"] = ([0, 51, 25], [178, 255, 102])
+colors["Red"] = ([0, 0, 154], [204, 204, 255])
+colors["Blue"] = ([102, 51, 0], [255, 153, 153])
+colors["Yellow"] = ([0, 244, 244], [204, 255, 255])
+colors["Orange"] = ([0, 128, 255], [153, 204, 255])
+colors["Black"] = ([0, 0, 0], [80, 80, 80])
+colors["Pink"] = ([177, 127, 218], [217, 211, 255])
+# colors["Green"]=([37,110,153],[80,240,255])
+# colors["Red"]=([0,110,153],[15,240,255])
+# colors["Blue"]=([80,110,153],[140,240,255])
+# colors["Yellow"]=([28,110,153],[32,240,255])
+# colors["Orange"]=([15,110,153],[28,240,255])
+
+food = {
+    "Sausage": [(0, 100), ("Red", "Pink")],
+    "Pepper": [(0, 100), ("Red", "Green", "Yellow")],
+    "Eggplants": [(0, 100), ("Yellow", "Green")],
+    "Bacon": [(0, 100), ("Red")],
+    "Spinach": [(0, 100), ("Green")],
+    "Broccoli": [(0, 100), ("Green")],
+    "Olives": [(0, 100), ("Green", "Black")],
+    "Shrimp": [(0, 100), ("Red", "Orange", "Pink")]
+}
 
 
 def pre_processing(img):
@@ -69,7 +89,6 @@ def get_counturs(clone, img):
     return clone, False
 
 
-
 def get_counturs_fruits(clone, img):
     countours, hierarchy = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     fruits = []
@@ -86,32 +105,48 @@ def get_counturs_fruits(clone, img):
     if len(fruits) > 0:
         # print(str(len(fruits)))
         cv2.putText(clone, str(len(fruits)), ((x + 30), (y + 30)),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
     return clone
 
-def testColor(color,img):
-    low = np.array([colors[color][0][0],colors[color][0][1],colors[color][0][2]])
-    high = np.array([colors[color][1][0],colors[color][1][1],colors[color][1][2]])
+
+def getFood(area, color):
+    resultados = []
+    for key, value in food.items():
+        if area in range(value[0][0], value[0][1]):
+            for colors in value[1]:
+                if colors == color:
+                    resultados.append(key)
+
+    return resultados
+
+
+def testColor(color, img):
+    low = np.array([colors[color][0][0], colors[color][0][1], colors[color][0][2]])
+    high = np.array([colors[color][1][0], colors[color][1][1], colors[color][1][2]])
     mask = cv2.inRange(img, low, high)
 
-    out = cv2.bitwise_and(img,img,mask = mask)
+    out = cv2.bitwise_and(img, img, mask=mask)
     return out
 
-def filterColor(img):
 
+def filterColor(img):
     red = testColor("Red", img)
     yellow = testColor("Yellow", img)
     green = testColor("Green", img)
     blue = testColor("Blue", img)
-    orange = testColor("Orange",img)
-    #cv2.imshow('TESTE', orange)
+    orange = testColor("Orange", img)
+    black = testColor("Black", img)
+    pink = testColor("Pink", img)
+    # cv2.imshow('TESTE', orange)
 
-    coloredPixels=[]
+    coloredPixels = []
     coloredPixels.append((cv2.countNonZero(pre_processing(red)), "Red"))
     coloredPixels.append((cv2.countNonZero(pre_processing(yellow)), "Yellow"))
     coloredPixels.append((cv2.countNonZero(pre_processing(green)), "Green"))
     coloredPixels.append((cv2.countNonZero(pre_processing(blue)), "Blue"))
     coloredPixels.append((cv2.countNonZero(pre_processing(orange)), "Orange"))
+    coloredPixels.append((cv2.countNonZero(pre_processing(black)), "Black"))
+    coloredPixels.append((cv2.countNonZero(pre_processing(pink)), "Pink"))
 
     max = 0
     col = ""
@@ -119,23 +154,32 @@ def filterColor(img):
     for c in coloredPixels:
         # print(c)
         if c[0] > max:
-            max=c[0]
-            col=c[1]
+            max = c[0]
+            col = c[1]
 
     return col
 
+
 def main():
-    capture = cv2.VideoCapture(0)
+
+    capture = cv2.VideoCapture(1)
 
     while True:
-        ret, frame = capture.read()
-        cv2.imshow('video', frame)
+        if len(sys.argv) is 1:
+            ret, frame = capture.read()
+        else:
+            frame = cv2.imread(sys.argv[1], cv2.IMREAD_UNCHANGED)
+            frame = cv2.resize(frame, (600, 430))
+
+        cv2.imshow('t e s t e', frame)
+        #cv2.imshow('POW', frame2)
 
         img = pre_processing(frame)
         # cv2.imshow('pre', img)
 
+        #print(getFood(50, "Pink"))
 
-        print(filterColor(frame))
+        #print(filterColor(frame))
 
         # res = frame.copy()
         # res = cv2.cvtColor(res, cv2.COLOR_BGR2BGRA)
@@ -145,13 +189,15 @@ def main():
 
         original = frame.copy()
         img, bandeja = get_counturs(original, img)
-        # cv2.imshow('cut_img', img)
+        cv2.imshow('cut_img', img)
 
         if bandeja:  # encontrou a bandeja
+
             pre_img_cut = pre_processing(img)
-            # cv2.imshow('pre cut_img', pre_img_cut)
+            cv2.imshow('pre cut_img', pre_img_cut)
 
             img = get_counturs_fruits(original, pre_img_cut)
+
 
         else:
             cv2.putText(img, "Base not found", (30, 30),
