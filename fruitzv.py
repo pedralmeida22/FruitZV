@@ -189,7 +189,6 @@ def main():
         #cv2.imshow('POW', frame2)
 
         img = pre_processing(frame)
-        # cv2.imshow('pre', img)
 
         original = frame.copy()
         img, bandeja = get_counturs(original, img)
