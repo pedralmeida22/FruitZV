@@ -263,12 +263,16 @@ def main():
         img, bandeja = get_counturs(original, img, frame)
 
         if bandeja:  # encontrou a bandeja
+
+            pre_img_cut = pre_processing(img)
+            # cv2.imshow('pre cut_img', pre_img_cut)
+
+            original = img.copy()
+            img, fruit_imgs = get_counturs_fruits(original, pre_img_cut, frame)
+            # fruit_imgs é uma lista em que cada elemento é uma foto
+
             if isCamera is False:
-                pre_img_cut = pre_processing(img)
-                # cv2.imshow('pre cut_img', pre_img_cut)
-                original = img.copy()
-                img, fruit_imgs = get_counturs_fruits(original, pre_img_cut, frame)
-                # fruit_imgs é uma lista em que cada elemento é uma foto
+
                 i = 0
                 comidas = []
                 for a in fruit_imgs:
@@ -281,12 +285,6 @@ def main():
                     show_food(frame, comidas)
             #--------------------
             else:
-                pre_img_cut = pre_processing(img)
-                # cv2.imshow('pre cut_img', pre_img_cut)
-
-                original = img.copy()
-                img, fruit_imgs = get_counturs_fruits(original, pre_img_cut, frame)
-                # fruit_imgs é uma lista em que cada elemento é uma foto
 
                 frutas = []
                 i = 0
@@ -304,19 +302,18 @@ def main():
                 if frutas:
                     show_food(frame, frutas)
 
-
-            # take photo
-            i = 0
-            # for a in fruit_imgs:
-            #     cv2.imwrite("dataset/tangerina2.jpg", a)
-            #     i += 1
-            #     cv2.imshow("t e s t e" + str(i), a)
+                # take photo
+                # i = 0
+                # for a in fruit_imgs:
+                #     cv2.imwrite("dataset/pera.jpg", a)
+                #     i += 1
+                #     cv2.imshow("t e s t e" + str(i), a)
 
         else:
             cv2.putText(frame, "Base not found", (30, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-        # cv2.imshow("n_fruits", img)
+        cv2.imshow("n_fruits", img)
         cv2.imshow("Imagem", frame)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
